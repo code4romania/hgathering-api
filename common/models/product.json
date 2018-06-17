@@ -1,5 +1,5 @@
 {
-  "name": "producto",
+  "name": "product",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {
@@ -9,16 +9,16 @@
     "legacy_id": {
       "type": "string"
     },
-    "nombre": {
+    "number": {
       "type": "string",
       "required": true
     },
-    "fechaDeActualizacion": {
+    "updated": {
       "type": "date",
       "required": true,
       "defaultFn": "now"
     },
-    "estado": {
+    "state": {
       "type": "boolean"
     }
   },

@@ -1,5 +1,6 @@
 {
-  "name": "acopio",
+  "name": "contact",
+  "plural": "contacts",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {
@@ -9,30 +10,27 @@
     "legacy_id": {
       "type": "string"
     },
-    "nombre": {
+    "number": {
       "type": "string"
     },
-    "direccion": {
+    "email": {
       "type": "string"
     },
-    "geopos": {
-      "type": "geopoint"
+    "twitter": {
+      "type": "string"
     },
-    "comments": {
+    "facebook": {
+      "type": "string"
+    },
+    "googleplus": {
+      "type": "string"
+    },
+    "phone": {
       "type": "string"
     }
   },
   "validations": [],
-  "relations": {
-    "contactos": {
-      "type": "hasMany",
-      "model": "contacto"
-    },
-    "productos": {
-      "type": "hasMany",
-      "model": "producto"
-    }
-  },
+  "relations": {},
   "acls": [],
   "methods": {}
 }

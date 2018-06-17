@@ -11,24 +11,25 @@ try:
     source = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6CChYk0cXlp_R_L2r9Enkar8qmDdGtu2CCE6dYYdU391PBt6zzePYQAkTJ5zJ6DHvkPsWu3Oty206/pub?gid=447869804&single=true&output=csv'
     data_request = requests.get(source)
     source_data = data_request.content.decode()
+
     if 'Inténtalo de nuevo' in source_data:
-        raise Exception('Demasiadas solicitudes')
+        raise Exception('Too many requests')
 except Exception as e:
-    logging.exception('No se pudieron obtener los datos de google')
+    logging.exception('Could not obtain data from google')
     exit(1)
 
-api_url = 'https://hapi.balterbyte.com/api'
+api_url = 'http://localhost:3000/api'
 headers = {'Content-type': 'application/json', 'Accept': 'application/json', 'Cache-Control': 'no-cache'}
 
-def upsert_acopio(data):
-    url = api_url + '/acopios'
-    verify_url = api_url + '/acopios?filter={"where":{"legacy_id":"' + data['legacy_id'] + '"}}'
+def upsert_collection(data):
+    url = api_url + '/collections'
+    verify_url = api_url + '/collections?filter={"where":{"legacy_id":"' + data['legacy_id'] + '"}}'
 
     r = requests.get(verify_url, data=json.dumps(data), headers=headers)
     response = r.json()
     if len(response) > 0:
-        idAcopio = response[0]['id']
-        update_url = api_url + '/acopios/{}'.format(idAcopio)
+        collectionID = response[0]['id']
+        update_url = api_url + '/collections/{}'.format(collectionID)
         r = requests.put(update_url, data=json.dumps(data), headers=headers)
         logging.debug(r.json())
         if r.status_code != 200:
@@ -42,15 +43,15 @@ def upsert_acopio(data):
 
         return r.json()
 
-def upsert_contacto(data):
-    url = api_url + '/contactos'
-    verify_url = api_url + '/contactos?filter={"where":{"legacy_id":"' + data['legacy_id'] + '"}}'
+def upsert_contact(data):
+    url = api_url + '/contacts'
+    verify_url = api_url + '/contacts?filter={"where":{"legacy_id":"' + data['legacy_id'] + '"}}'
 
     r = requests.get(verify_url, data=json.dumps(data), headers=headers)
     response = r.json()
     if len(response) > 0:
-        idContacto = response[0]['id']
-        update_url = api_url + '/contactos/{}'.format(idContacto)
+        contactID = response[0]['id']
+        update_url = api_url + '/contacts/{}'.format(contactID)
         r = requests.put(update_url, data=json.dumps(data), headers=headers)
         if r.status_code != 200:
             return
@@ -64,15 +65,15 @@ def upsert_contacto(data):
         return r.json()
 
 
-def upsert_productos(idAcopio, productos):
-    url = api_url + '/acopios/{}/productos'.format(idAcopio)
+def upsert_products(collectionID, products):
+    url = api_url + '/collections/{}/products'.format(collectionID)
     requests.delete(url, headers=headers)
 
-    for producto in productos:
-        data = {"nombre": producto.strip()}
+    for product in products:
+        data = {"number": product.strip()}
         r = requests.post(url, data=json.dumps(data), headers=headers)
         if r.status_code != 200:
-            logging.warning("Unable to register product {} in {}".format(producto, idAcopio))
+            logging.warning("Unable to register product {} in {}".format(product, collectionID))
 
 f = StringIO(source_data)
 reader = csv.DictReader(f)
@@ -83,55 +84,55 @@ for row in reader:
     try:
         data = {
             'legacy_id': row['id'],
-            'nombre': row['Nombre del centro de acopio'],
-            'direccion': row['Dirección (agregada)'],
+            'number': row['Nombre del centro de acopio'],
+            'address': row['Dirección (agregada)'],
         }
 
         try:
             data['geopos'] = {'lat': float(row['lat']), 'lng': float(row['lon'])}
         except Exception as e:
-            logging.warning("posición geografica ignorada lat:{} long:{}".format(row['lat'], row['lon']))
+            logging.warning("ignored geopos lat:{} long:{}".format(row['lat'], row['lon']))
 
 
-        acopio = upsert_acopio(data)
-        if not acopio:
+        collection = upsert_collection(data)
+        if not collection:
             logging.info('retry lat and long switched')
             try:
                 data['geopos'] = {'lat': float(row['lon']), 'lng': float(row['lat'])}
             except Exception as e:
-                logging.warning("posición geografica ignorada row: {} lat:{} long:{}".format(row['ID'], row['lon'], row['lat']))
+                logging.warning("ignored geopos row: {} lat:{} long:{}".format(row['ID'], row['lon'], row['lat']))
 
-            acopio = upsert_acopio(data)
+            collection = upsert_collection(data)
 
-        if not acopio:
-            logging.error('fila ignorada ID: {}'.format(json.dumps(data)))
+        if not collection:
+            logging.error('ignored row ID: {}'.format(json.dumps(data)))
             continue
 
         # POST CONTACT
         contact_data = {
             "legacy_id": "{}-{}".format(data['legacy_id'], 1),
-            "acopioId": acopio['id'],
-            "nombre": row['Nombre Contacto'],
+            "collectionID": collection['id'],
+            "number": row['Nombre Contacto'],
             "email": row['Correo'],
             "twitter": row['Twitter'],
             "facebook": row['Facebook'],
-            "telefono": row['Teléfono']
+            "phone": row['Teléfono']
         }
 
-        contacto = upsert_contacto(contact_data)
-        if not contacto:
-            logging.error("no se pudo agregar el contacto {}".format(json.dumps(contact_data)))
+        contact = upsert_contact(contact_data)
+        if not contact:
+            logging.error("Can't add contact {}".format(json.dumps(contact_data)))
 
 
         # POST PRODUCTS
-        productos_raw = row['Necesidades']
-        productos_raw = productos_raw.replace('y', ',')
-        productos_raw = productos_raw.replace('.', ',')
-        productos = productos_raw.split(",")
+        products_raw = row['Necesidades']
+        products_raw = products_raw.replace('y', ',')
+        products_raw = products_raw.replace('.', ',')
+        products = products_raw.split(",")
 
-        upsert_productos(acopio['id'], productos)
+        upsert_products(collection['id'], products)
 
         logging.info("OK")
 
     except Exception as e:
-        logging.exception("fila ignorada {}".format(row))
+        logging.exception("ignored row {}".format(row))
