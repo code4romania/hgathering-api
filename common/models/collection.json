@@ -1,6 +1,5 @@
 {
-  "name": "contacto",
-  "plural": "contactos",
+  "name": "collection",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {
@@ -10,27 +9,30 @@
     "legacy_id": {
       "type": "string"
     },
-    "nombre": {
+    "name": {
       "type": "string"
     },
-    "email": {
+    "address": {
       "type": "string"
     },
-    "twitter": {
-      "type": "string"
+    "geopos": {
+      "type": "geopoint"
     },
-    "facebook": {
-      "type": "string"
-    },
-    "googleplus": {
-      "type": "string"
-    },
-    "telefono": {
+    "comments": {
       "type": "string"
     }
   },
   "validations": [],
-  "relations": {},
+  "relations": {
+    "contacts": {
+      "type": "hasMany",
+      "model": "contact"
+    },
+    "products": {
+      "type": "hasMany",
+      "model": "product"
+    }
+  },
   "acls": [],
   "methods": {}
 }
