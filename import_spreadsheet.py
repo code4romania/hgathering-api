@@ -70,7 +70,7 @@ def upsert_products(collectionID, products):
     requests.delete(url, headers=headers)
 
     for product in products:
-        data = {"number": product.strip()}
+        data = {"name": product.strip()}
         r = requests.post(url, data=json.dumps(data), headers=headers)
         if r.status_code != 200:
             logging.warning("Unable to register product {} in {}".format(product, collectionID))
@@ -84,7 +84,7 @@ for row in reader:
     try:
         data = {
             'legacy_id': row['id'],
-            'number': row['Nombre del centro de acopio'],
+            'name': row['Nombre del centro de acopio'],
             'address': row['Dirección (agregada)'],
         }
 
@@ -112,7 +112,7 @@ for row in reader:
         contact_data = {
             "legacy_id": "{}-{}".format(data['legacy_id'], 1),
             "collectionID": collection['id'],
-            "number": row['Nombre Contacto'],
+            "name": row['Nombre Contacto'],
             "email": row['Correo'],
             "twitter": row['Twitter'],
             "facebook": row['Facebook'],

@@ -10,7 +10,7 @@
     "legacy_id": {
       "type": "string"
     },
-    "number": {
+    "name": {
       "type": "string"
     },
     "email": {
